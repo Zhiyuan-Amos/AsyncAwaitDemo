@@ -95,7 +95,6 @@ static async Task MainAsync()
 	Task<Waffle> waffleTask = MakeWaffleAsync(); // (3)
 	ReplyMum(); // (4)
 	Waffle waffle = await waffleTask; // (5) & (7)
-	// do something with waffle. Maybe eat it?
 }
 
 static async Task<Waffle> MakeWaffleAsync()
@@ -120,11 +119,11 @@ Let's analyse the code:
 
 Key clarifications:
 
-1. Don't `await` a task too early; `await` it only at the point when you need its result. This allows the thread to execute the subsequent code till the `await` statement. This is illustrated in the above code sample:
+1. Don't `await` a task too early; `await` it only at the point when you need its result. This allows the thread to execute the subsequent code until the `await` statement. This is illustrated in the above code sample:
 
-	a. Notice the control flow at step 2. After executing `await task`, control is returned to `MainAsync()`; code after the `await` statement (step 6) is not executed until `task` completes.
+	a. Notice the control flow in step 2. After executing `await task`, control is returned to `MainAsync()`; code after the `await` statement (step 6) is not executed until `task` completes.
 
-	a. Similarly, if `await waffleTask` was executed before `ReplyMum()` (i.e. immediately after step 3), `ReplyMum()` won't execute until `waffleTask` completes.
+	b. Similarly, if `await waffleTask` was executed before `ReplyMum()` (i.e. immediately after step 3), `ReplyMum()` won't execute until `waffleTask` completes.
 
 1. Suppose `ReplyMum()` takes longer than 2000ms to complete, then `await waffleTask` will return a value **immediately** since `waffleTask` has already completed.
 
@@ -201,7 +200,11 @@ Now, you would continue with snapping a photo of the waffle after `waffleTask` a
 
 1. `Result` ["blocks the calling thread until the asynchronous operation is complete"](https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1.result?view=netframework-4.8#remarks). However, it doesn't cause performance degradation in our scenario as we have `await`-ed for the tasks to complete. Therefore, `waffleTask.Result`, `coffeeTask.Result` and `downloadCameraAppTask.Result` will return a value immediately.
 
-1. Use [`WhenAny`](https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany?view=netframework-4.8) if you want the task to complete when any of the supplied tasks have completed.
+1. Related to the above, use `Result` and `Wait()` judiciously so that the thread does not get blocked.
+
+1. Use [`WhenAny`](https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.whenany?view=netframework-4.8) if you want the task to complete when any of the supplied tasks have completed. 
+
+1. Favor asynchronous API (`WhenAny`, `WhenAll`) over synchronous API (`WaitAny`, `WaitAll`).
 
 ## Good to Know
 
@@ -231,6 +234,11 @@ Now, you would continue with snapping a photo of the waffle after `waffleTask` a
 
 ## Conclusion
 
-Hopefully, you found this guide helpful in your understanding of `async` / `await`. There are other topics that I didn't cover such as task cancellation, as I haven't had the need to use them. Knowing the above should be sufficient to kick-start your journey into asynchronous programming.
+There are other advanced topics that I didn't cover so as to keep this article short, such as:
 
-If you liked it, please give it a ❤️ or a 🦄, and do let me know your thoughts in the section below :)
+1. [Task Cancellation](https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/task-cancellation)
+1. [Exception Handling](https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/exception-handling-task-parallel-library)
+
+However, you should be able to do a whole lot of asynchronous programming with the above knowledge.
+
+Lastly, if you liked this article, please give it a ❤️ or a 🦄, and do let me know your thoughts in the section below :)
